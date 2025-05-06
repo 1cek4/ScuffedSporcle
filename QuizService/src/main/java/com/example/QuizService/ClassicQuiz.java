@@ -1,5 +1,6 @@
 package com.example.QuizService;
 import com.sun.jdi.event.StepEvent;
+import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -8,7 +9,7 @@ import java.util.UUID;
 
 public class ClassicQuiz {
 
-
+    @Id
     private UUID quizGuid;
     private String quizName;
     private Category category;
@@ -34,6 +35,102 @@ public class ClassicQuiz {
         this.extraHeading = extraHeading;
         this.hints = hints;
         this.answers = answers;
+        this.extras = extras;
+    }
+
+    public UUID getQuizGuid() {
+        return quizGuid;
+    }
+
+    public void setQuizGuid(UUID quizGuid) {
+        this.quizGuid = quizGuid;
+    }
+
+    public String getQuizName() {
+        return quizName;
+    }
+
+    public void setQuizName(String quizName) {
+        this.quizName = quizName;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public String getQuizDescription() {
+        return quizDescription;
+    }
+
+    public void setQuizDescription(String quizDescription) {
+        this.quizDescription = quizDescription;
+    }
+
+    public String getTimer() {
+        return timer;
+    }
+
+    public void setTimer(String timer) {
+        this.timer = timer;
+    }
+
+    public String getAnswerLabel() {
+        return answerLabel;
+    }
+
+    public void setAnswerLabel(String answerLabel) {
+        this.answerLabel = answerLabel;
+    }
+
+    public String getHintHeading() {
+        return hintHeading;
+    }
+
+    public void setHintHeading(String hintHeading) {
+        this.hintHeading = hintHeading;
+    }
+
+    public String getAnswerHeading() {
+        return answerHeading;
+    }
+
+    public void setAnswerHeading(String answerHeading) {
+        this.answerHeading = answerHeading;
+    }
+
+    public String getExtraHeading() {
+        return extraHeading;
+    }
+
+    public void setExtraHeading(String extraHeading) {
+        this.extraHeading = extraHeading;
+    }
+
+    public ArrayList<String> getHints() {
+        return hints;
+    }
+
+    public void setHints(ArrayList<String> hints) {
+        this.hints = hints;
+    }
+
+    public ArrayList<String> getAnswers() {
+        return answers;
+    }
+
+    public void setAnswers(ArrayList<String> answers) {
+        this.answers = answers;
+    }
+
+    public ArrayList<String> getExtras() {
+        return extras;
+    }
+
+    public void setExtras(ArrayList<String> extras) {
         this.extras = extras;
     }
 }
