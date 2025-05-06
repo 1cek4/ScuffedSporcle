@@ -1,4 +1,4 @@
-package org.example;
+package com.example.QuizService;
 import java.util.UUID;
 
 public class ClickableQuiz {
@@ -6,8 +6,8 @@ public class ClickableQuiz {
     private UUID quizGuid;
     private String quizName;
     private Category category;
-    private String QuizDescription;
-    private String Timer;
+    private String quizDescription;
+    private String timer;
 
 
 
