@@ -20,7 +20,7 @@ public class QuizRestController {
     public List<ClassicQuiz> findAllSpaceships() {
         return classicQuizRepo.findAll();
     }
-    @PostMapping(path = "")
+    @PostMapping(path = "/classicQuiz")
     @ResponseStatus(code = HttpStatus.CREATED)
     public void createSpaceship(@RequestBody ClassicQuiz spaceship) {
         spaceship.setQuizGuid(UUID.randomUUID());
