@@ -15,20 +15,20 @@ public class ClassicQuizService {
         this.classicQuizRepo = classicQuizRepo;
     }
 
-    public ClassicQuiz createClassicQuiz(ClassicQuiz spaceship) {
-        return classicQuizRepo.save(spaceship);
+    public ClassicQuiz createClassicQuiz(ClassicQuiz classicQuiz) {
+        return classicQuizRepo.save(classicQuiz);
     }
 
     public List<ClassicQuiz> getAllClassicQuizs() {
         return classicQuizRepo.findAll();
     }
 
-    public Optional<ClassicQuiz> getClassicQuizById(UUID spaceshipGuid) {
-        return classicQuizRepo.findById(spaceshipGuid);
+    public Optional<ClassicQuiz> getClassicQuizById(UUID classicQuizGuid) {
+        return classicQuizRepo.findById(classicQuizGuid);
     }
 
-    public Optional<ClassicQuiz> updateClassicQuiz(UUID spaceshipGuid, ClassicQuiz updatedClassicQuiz) {
-        return classicQuizRepo.findById(spaceshipGuid).map(existingClassicQuiz -> {
+    public Optional<ClassicQuiz> updateClassicQuiz(UUID classicQuizGuid, ClassicQuiz updatedClassicQuiz) {
+        return classicQuizRepo.findById(classicQuizGuid).map(existingClassicQuiz -> {
             existingClassicQuiz.setQuizName(updatedClassicQuiz.getQuizName());
             existingClassicQuiz.setCategory(updatedClassicQuiz.getCategory());
             existingClassicQuiz.setQuizDescription(updatedClassicQuiz.getQuizDescription());

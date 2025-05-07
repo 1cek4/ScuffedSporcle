@@ -17,15 +17,50 @@ public class QuizRestController {
 
     @GetMapping(path = "/classicQuiz")
     @ResponseStatus(code = HttpStatus.OK)
-    public List<ClassicQuiz> findAllSpaceships() {
+    public List<ClassicQuiz> findAllClassicQuiz() {
         return classicQuizRepo.findAll();
     }
     @PostMapping(path = "/classicQuiz")
     @ResponseStatus(code = HttpStatus.CREATED)
-    public void createSpaceship(@RequestBody ClassicQuiz spaceship) {
-        spaceship.setQuizGuid(UUID.randomUUID());
-        classicQuizRepo.save(spaceship);
+    public void createClassicQuiz(@RequestBody ClassicQuiz classicQuiz) {
+        classicQuiz.setQuizGuid(UUID.randomUUID());
+        classicQuizRepo.save(classicQuiz);
     }
+
+    @PutMapping("/classicQuiz/{quizGuid}")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateClassicQuiz(
+            @PathVariable(required = true) UUID quizGuid,
+            @RequestBody ClassicQuiz classicQuiz) {
+
+        ClassicQuiz existingQuiz = classicQuizRepo.findById(quizGuid).orElse(null);
+
+        if (existingQuiz == null) {
+            throw new RuntimeException("Quiz not found with ID: " + quizGuid);
+        }
+
+        existingQuiz.setQuizName(classicQuiz.getQuizName());
+        existingQuiz.setCategory(classicQuiz.getCategory());
+        existingQuiz.setQuizDescription(classicQuiz.getQuizDescription());
+        existingQuiz.setTimer(classicQuiz.getTimer());
+        existingQuiz.setAnswerLabel(classicQuiz.getAnswerLabel());
+        existingQuiz.setHintHeading(classicQuiz.getHintHeading());
+        existingQuiz.setAnswerHeading(classicQuiz.getAnswerHeading());
+        existingQuiz.setExtraHeading(classicQuiz.getExtraHeading());
+        existingQuiz.setHints(classicQuiz.getHints());
+        existingQuiz.setAnswers(classicQuiz.getAnswers());
+        existingQuiz.setExtras(classicQuiz.getExtras());
+
+        classicQuizRepo.save(existingQuiz);
+    }
+
+    @DeleteMapping(path = "/classicQuiz/{quizGuid}")
+    @ResponseStatus(HttpStatus.OK)
+    public void DeleteItem(@PathVariable(required = true) UUID quizGuid) {
+        classicQuizRepo.deleteById(quizGuid);
+    }
+
+
 
 
 
