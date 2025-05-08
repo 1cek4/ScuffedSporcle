@@ -1,0 +1,33 @@
+networks:
+  quizNet:
+    external: false
+
+services:
+  QuizServiceDBMongo:
+    container_name: QuizServiceDBMongo
+    image: mongo:latest
+    restart: always
+    hostname: QuizServiceDBMongo
+    ports:
+      - "27017:27017"
+    networks:
+      - quizNet
+
+
+
+  QuizServiceAPI:
+    container_name: QuizServiceAPI
+    build:
+      context: ./QuizService
+      dockerfile: Dockerfile
+    image: quizserviceapi:1
+    restart: always
+    hostname: QuizServiceAPI
+    ports:
+      - "8081:8080"
+    networks:
+      - quizNet
+    depends_on:
+      - QuizServiceDBMongo
+  
+

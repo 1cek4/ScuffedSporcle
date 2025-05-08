@@ -12,6 +12,7 @@
 	<artifactId>QuizService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>QuizService</name>
+	<packaging>war</packaging>
 	<description>Spring Boot QuizService project</description>
 	<url/>
 	<licenses>
