@@ -1,0 +1,23 @@
+FROM python:3.13-slim
+
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+ENV REDIS_HOST=UserServiceDBRedis
+ENV REDIS_PORT=6379
+ENV CLASSIC_QUIZ_SERVICE_URL=http://QuizServiceAPI:8080/classicQuiz
+
+ENV EUREKA_SERVER=http://EurekaRegistry:8761/eureka/
+ENV SERVICE_NAME=UserServiceAPI
+ENV USER_SERVICE_IP=UserServiceAPI
+ENV USER_SERVICE_PORT=8082
+
+EXPOSE 8082
+
+CMD ["uvicorn", "userRestController:app", "--host", "0.0.0.0", "--port", "8082"]

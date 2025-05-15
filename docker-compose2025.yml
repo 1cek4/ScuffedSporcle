@@ -30,4 +30,28 @@ services:
     depends_on:
       - QuizServiceDBMongo
   
-
+  UserServiceAPI:
+    container_name: UserServiceAPI
+    build:
+      context: ./UserService
+      dockerfile: Dockerfile
+    image: userserviceapi:1
+    restart: always
+    hostname: UserServiceAPI
+    ports:
+      - "8082:8082"
+    environment:
+      REDIS_HOST: UserServiceDBRedis
+      REDIS_PORT: 6379
+      SPACESHIP_SERVICE_URL: http://SpaceshipServiceAPI:8080/api/spaceships
+    networks:
+      - quizNet
+    depends_on:
+      - UserServiceMariadb
+  
+  UserServiceMariadb:
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: abc123
+      MARIADB_DATABASE: users
