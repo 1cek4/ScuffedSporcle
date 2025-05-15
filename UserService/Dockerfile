@@ -1,18 +1,22 @@
-FROM python:3.13-slim
-
+FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+# Install build tools and MariaDB dev libs
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libmariadb-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set environment variables
 ENV REDIS_HOST=UserServiceDBRedis
 ENV REDIS_PORT=6379
 ENV CLASSIC_QUIZ_SERVICE_URL=http://QuizServiceAPI:8080/classicQuiz
-
 ENV EUREKA_SERVER=http://EurekaRegistry:8761/eureka/
 ENV SERVICE_NAME=UserServiceAPI
 ENV USER_SERVICE_IP=UserServiceAPI

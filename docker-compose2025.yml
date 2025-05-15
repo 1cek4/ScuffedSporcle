@@ -43,7 +43,7 @@ services:
     environment:
       REDIS_HOST: UserServiceDBRedis
       REDIS_PORT: 6379
-      SPACESHIP_SERVICE_URL: http://SpaceshipServiceAPI:8080/api/spaceships
+      CLASSIC_QUIZ_SERVICE_URL: http://QuizServiceAPI:8080/api/classicQuiz
     networks:
       - quizNet
     depends_on:
@@ -55,3 +55,13 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: abc123
       MARIADB_DATABASE: users
+    networks:
+      - quizNet
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - quizNet
+
