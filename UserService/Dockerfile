@@ -17,10 +17,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV REDIS_HOST=UserServiceDBRedis
 ENV REDIS_PORT=6379
 ENV CLASSIC_QUIZ_SERVICE_URL=http://QuizServiceAPI:8080/classicQuiz
-ENV EUREKA_SERVER=http://EurekaRegistry:8761/eureka/
 ENV SERVICE_NAME=UserServiceAPI
 ENV USER_SERVICE_IP=UserServiceAPI
 ENV USER_SERVICE_PORT=8082
+ENV DB_HOST=UserServiceMariadb
+ENV DB_USER=root
+ENV DB_PASSWORD=abc123
+ENV DB_NAME=usersdb
+ENV DB_PORT=3306
 
 EXPOSE 8082
 

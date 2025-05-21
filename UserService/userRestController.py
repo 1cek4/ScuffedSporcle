@@ -1,76 +1,183 @@
-
-import mariadb
-import mysql.connector
-
-import sys
-
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Body
 from fastapi.middleware.cors import CORSMiddleware
-import json
-import requests
-import os   
-from uuid import UUID
+from pydantic import BaseModel
+from typing import List, Optional
+import mariadb
 from dotenv import load_dotenv
-import py_eureka_client.eureka_client as eureka_client
-
-
-try:
-    conn = mysql.connector.connect(
-    host="127.0.0.1",
-    user="root",
-    password="abc123",
-    port=3306,
-    database="userdb"
-)
-
-except mariadb.Error as e:
-    print(f"Error connecting to MariaDB Platform: {e}")
-    sys.exit(1)
-
-cur = conn.cursor()
+import os
 
 load_dotenv()
+
+SERVICE_NAME = os.getenv("SERVICE_NAME", "UserServiceAPI")
+SERVICE_PORT = int(os.getenv("SERVICE_PORT", 8082))
+SERVICE_IP = os.getenv("SERVICE_IP", "127.0.0.1")
+CLASSICQUIZ_SERVICE_URL = os.getenv("CLASSICQUIZ_SERVICE_URL", "http://localhost:8081/classicQuiz")
+
+
+class User(BaseModel):
+    userGuid: str
+    email: str
+    password: str
+    userName: str
+    completedQuiz: Optional[str] = None
+    isAdmin: Optional[bool] = False
+
+
+
+# Dependency to get the database connection
+def get_db_connection():
+    try:
+        conn = mariadb.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", "abc123"),
+            port=int(os.getenv("DB_PORT", 3306)),
+            database=os.getenv("DB_NAME", "usersdb")
+        )
+        return conn
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB: {e}")
+        raise HTTPException(status_code=500, detail="Database connection failed")  # Raise HTTPException
+
+
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Read environment variables with defaults for local development
-SPACESHIP_SERVICE_URL = os.getenv("SPACESHIP_SERVICE_URL", "http://localhost:8081/api/spaceships")
-
-EUREKA_SERVER = os.getenv("EUREKA_SERVER", "http://localhost:8761/eureka")
-SERVICE_NAME = os.getenv("SERVICE_NAME", "BasketServiceAPI")
-BASKET_SERVICE_PORT = int(os.getenv("BASKET_SERVICE_PORT", 8082))
-BASKET_SERVICE_IP = os.getenv("BASKET_SERVICE_IP", "127.0.0.1")
 
 
-@app.on_event("startup")
-async def startup_event():
-    await eureka_client.init_async(        
-        eureka_server=EUREKA_SERVER,
-        app_name=SERVICE_NAME,
-        instance_port=BASKET_SERVICE_PORT,
-        instance_ip=BASKET_SERVICE_IP
-    )
+# Define the API endpoint to get all users
+@app.get("/users", response_model=List[User])
+def get_users(conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users")
+        users_data = cur.fetchall()
+        users = [
+            User(
+                userGuid=row[0],
+                email=row[1],
+                password=row[2],
+                userName=row[3],
+                completedQuiz=row[4],
+                isAdmin=bool(row[5])
+            )
+            for row in users_data
+        ]
+        cur.close()
+        return users
+    except mariadb.Error as e:
+        print(f"Error fetching users: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve users from the database",
+        )
+    finally:
+        conn.close()
 
-@app.get("/Users", response_model=list[User])
-def get_user(user_id: str):
-    cur.execute(
-    "SELECT * FROM users")
-    vars = cur.fetchall();
 
-    return user
+@app.get("/users/{user_id}", response_model=User)
+def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users WHERE UserGuid = ?",
+            (user_id,)
+        )
+        user = cur.fetchone()
+        cur.close()
+        if user:
+            return User(
+                userGuid=user[0],
+                email=user[1],
+                password=user[2],
+                userName=user[3],
+                completedQuiz=user[4],
+                isAdmin=bool(user[5])
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User with ID {user_id} not found"
+            )
+    except mariadb.Error as e:
+        print(f"Error fetching user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user from the database",
+        )
+    finally:
+        conn.close()
 
-@app.get("/Users/{user_id}", response_model=User)
-def get_user_with_id(user_id: str):
-    cur.execute(
-    "SELECT * FROM users WHERE userGuid =?", 
-    (user_id,))
-    vars = cur.fetchall();
 
-    return user
+@app.post("/users", response_model=User, status_code=201)
+def create_user(user: User, conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO users (UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin) VALUES (?, ?, ?, ?, ?, ?)",
+            (user.userGuid, user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin))
+        )
+        conn.commit()
+        cur.close()
+        return user
+    except mariadb.Error as e:
+        print(f"Error creating user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user",
+        )
+    finally:
+        conn.close()
+
+
+@app.put("/users/{user_id}", response_model=User)
+def update_user(user_id: str, user: User, conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE users SET Email=?, Password=?, Username=?, CompletedQuiz=?, IsAdmin=? WHERE UserGuid=?",
+            (user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin), user_id)
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User with ID {user_id} not found"
+            )
+        conn.commit()
+        cur.close()
+        return user
+    except mariadb.Error as e:
+        print(f"Error updating user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user",
+        )
+    finally:
+        conn.close()
+
+
+@app.delete("/users/{user_id}", status_code=204)
+def delete_user(user_id: str, conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM users WHERE UserGuid = ?", (user_id,))
+        if cur.rowcount == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"User with ID {user_id} not found"
+            )
+        conn.commit()
+        cur.close()
+        return
+    except mariadb.Error as e:
+        print(f"Error deleting user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user",
+        )
+    finally:
+        conn.close()

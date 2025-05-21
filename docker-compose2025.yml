@@ -50,18 +50,28 @@ services:
       - UserServiceMariadb
   
   UserServiceMariadb:
+    container_name: UserServiceMariadb
     image: mariadb
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: abc123
-      MARIADB_DATABASE: users
+      MARIADB_DATABASE: usersdb
+    volumes:
+      - usersdb_data:/var/lib/mysql
     networks:
       - quizNet
+
   adminer:
+    container_name: adminer
     image: adminer
     restart: always
     ports:
       - 8080:8080
     networks:
       - quizNet
+
+volumes:
+  usersdb_data:
+
+
 
