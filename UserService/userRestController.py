@@ -23,6 +23,13 @@ class User(BaseModel):
     completedQuiz: Optional[str] = None
     isAdmin: Optional[bool] = False
 
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    userName: str
+    completedQuiz: Optional[str] = None
+    isAdmin: Optional[bool] = False
+
 
 
 # Dependency to get the database connection
@@ -115,14 +122,13 @@ def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_conne
 
 
 @app.post("/users", response_model=User, status_code=201)
-def create_user(user: User, conn: mariadb.Connection = Depends(get_db_connection)):
+def create_user(user: UserCreate, conn: mariadb.Connection = Depends(get_db_connection)):
     try:
         cur = conn.cursor()
         new_guid = str(uuid.uuid4())
-        is_admin = getattr(user, "isAdmin", False)
         cur.execute(
             "INSERT INTO users (UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin) VALUES (?, ?, ?, ?, ?, ?)",
-            (new_guid, user.email, user.password, user.userName, user.completedQuiz, int(is_admin))
+            (new_guid, user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin))
         )
         conn.commit()
         cur.close()
@@ -132,7 +138,7 @@ def create_user(user: User, conn: mariadb.Connection = Depends(get_db_connection
             password=user.password,
             userName=user.userName,
             completedQuiz=user.completedQuiz,
-            isAdmin=is_admin
+            isAdmin=user.isAdmin
         )
     except mariadb.Error as e:
         print(f"Error creating user: {e}")

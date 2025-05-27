@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field
-from uuid import UUID
+from pydantic import BaseModel
 from typing import Optional
 from quiz import CompletedQuiz
 
-class User(BaseModel):
-    userGuid: Optional[UUID] = None
+class UserCreate(BaseModel):
     email: str
     password: str
-    userName: str
+    username: str
     completedQuiz: list[CompletedQuiz]
     isAdmin: bool = False
+
+class User(UserCreate):
+    userGuid: str
