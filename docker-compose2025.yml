@@ -29,6 +29,7 @@ services:
       - quizNet
     depends_on:
       - QuizServiceDBMongo
+      - EurekaRegistry
   
   UserServiceAPI:
     container_name: UserServiceAPI
@@ -48,6 +49,7 @@ services:
       - quizNet
     depends_on:
       - UserServiceMariadb
+      - EurekaRegistry
   
   UserServiceMariadb:
     container_name: UserServiceMariadb
@@ -89,11 +91,37 @@ services:
       DB_NAME: usersdb
       DB_PORT: 3306
       PORT: 8083
-      # Add other environment variables as needed
+      EUREKA_HOST: EurekaRegistry
+      EUREKA_PORT: 8761
     networks:
       - quizNet
     depends_on:
       - UserServiceMariadb
+
+  EurekaRegistry:
+    container_name: EurekaRegistry
+    image: steeltoeoss/eureka-server:latest
+    restart: always
+    hostname: EurekaRegistry
+    ports:
+      - 8761:8761
+    networks:
+      - quizNet    
+
+  OcelotAPIGateway:
+    container_name: OcelotAPIGateway
+    build:
+      context: ./OcelotAPIGateway
+      dockerfile: Dockerfile
+    image: ocelotapigateway:1
+    restart: always
+    hostname: OcelotAPIGateway
+    ports:
+      - 5041:8080
+    networks:
+      - quizNet
+    depends_on:
+      - EurekaRegistry
 
 volumes:
   usersdb_data:

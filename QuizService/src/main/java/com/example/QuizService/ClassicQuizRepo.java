@@ -11,7 +11,7 @@ public interface ClassicQuizRepo extends MongoRepository<ClassicQuiz,UUID>{
 
     List<ClassicQuiz> findByQuizNameContainingIgnoreCase(String title);
 
-    // Custom query to find books by author
+    // Custom query to find quizzes by author
     List<ClassicQuiz> findByCategoryContainingIgnoreCase(String author);
 
 
