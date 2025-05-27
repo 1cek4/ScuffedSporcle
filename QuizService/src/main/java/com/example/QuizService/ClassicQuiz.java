@@ -11,6 +11,7 @@ public class ClassicQuiz {
 
     @Id
     private UUID quizGuid;
+    private UUID userGuid;
     private String quizName;
     private Category category;
     private String quizDescription;

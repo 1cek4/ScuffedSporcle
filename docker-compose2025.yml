@@ -53,9 +53,11 @@ services:
     container_name: UserServiceMariadb
     image: mariadb
     restart: always
+    ports:
+      - "3307:3306"   # Host port 3307 maps to container port 3306
     environment:
-      MARIADB_ROOT_PASSWORD: abc123
-      MARIADB_DATABASE: usersdb
+      MYSQL_ROOT_PASSWORD: abc123
+      MYSQL_DATABASE: usersdb
     volumes:
       - usersdb_data:/var/lib/mysql
     networks:
@@ -69,6 +71,29 @@ services:
       - 8080:8080
     networks:
       - quizNet
+
+  AuthServiceAPI:
+    container_name: AuthServiceAPI
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    image: authserviceapi:1
+    restart: always
+    hostname: AuthServiceAPI
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: UserServiceMariadb
+      DB_USER: root
+      DB_PASSWORD: abc123
+      DB_NAME: usersdb
+      DB_PORT: 3306
+      PORT: 8083
+      # Add other environment variables as needed
+    networks:
+      - quizNet
+    depends_on:
+      - UserServiceMariadb
 
 volumes:
   usersdb_data:

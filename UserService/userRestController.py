@@ -5,6 +5,7 @@ from typing import List, Optional
 import mariadb
 from dotenv import load_dotenv
 import os
+import uuid
 
 load_dotenv()
 
@@ -57,7 +58,7 @@ app.add_middleware(
 def get_users(conn: mariadb.Connection = Depends(get_db_connection)):
     try:
         cur = conn.cursor()
-        cur.execute("SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users")
+        cur.execute("SELECT UserGuid, Email, Password, Username, CompletedQuiz FROM users")
         users_data = cur.fetchall()
         users = [
             User(
@@ -66,7 +67,6 @@ def get_users(conn: mariadb.Connection = Depends(get_db_connection)):
                 password=row[2],
                 userName=row[3],
                 completedQuiz=row[4],
-                isAdmin=bool(row[5])
             )
             for row in users_data
         ]
@@ -87,7 +87,7 @@ def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_conne
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users WHERE UserGuid = ?",
+            "SELECT UserGuid, Email, Password, Username, CompletedQuiz FROM users WHERE UserGuid = ?",
             (user_id,)
         )
         user = cur.fetchone()
@@ -99,7 +99,6 @@ def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_conne
                 password=user[2],
                 userName=user[3],
                 completedQuiz=user[4],
-                isAdmin=bool(user[5])
             )
         else:
             raise HTTPException(
@@ -119,13 +118,22 @@ def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_conne
 def create_user(user: User, conn: mariadb.Connection = Depends(get_db_connection)):
     try:
         cur = conn.cursor()
+        new_guid = str(uuid.uuid4())
+        is_admin = getattr(user, "isAdmin", False)
         cur.execute(
             "INSERT INTO users (UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin) VALUES (?, ?, ?, ?, ?, ?)",
-            (user.userGuid, user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin))
+            (new_guid, user.email, user.password, user.userName, user.completedQuiz, int(is_admin))
         )
         conn.commit()
         cur.close()
-        return user
+        return User(
+            userGuid=new_guid,
+            email=user.email,
+            password=user.password,
+            userName=user.userName,
+            completedQuiz=user.completedQuiz,
+            isAdmin=is_admin
+        )
     except mariadb.Error as e:
         print(f"Error creating user: {e}")
         raise HTTPException(
@@ -141,8 +149,8 @@ def update_user(user_id: str, user: User, conn: mariadb.Connection = Depends(get
     try:
         cur = conn.cursor()
         cur.execute(
-            "UPDATE users SET Email=?, Password=?, Username=?, CompletedQuiz=?, IsAdmin=? WHERE UserGuid=?",
-            (user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin), user_id)
+            "UPDATE users SET Email=?, Password=?, Username=?, CompletedQuiz=? WHERE UserGuid=?",
+            (user.email, user.password, user.userName, user.completedQuiz, user_id)
         )
         if cur.rowcount == 0:
             raise HTTPException(
