@@ -40,7 +40,7 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://APIGatewayOcelot:8080",
+    "BaseUrl": "http://OcelotAPIGateway:8080",
     "RequestIdKey": "OcRequestId",
     "DownstreamScheme": "http",
     "ReRoutesCaseSensitive": false,

@@ -3,47 +3,35 @@
     {
       "ServiceName": "QuizServiceAPI",
       "DownstreamPathTemplate": "/{everything}",
-      "UpstreamPathTemplate": "/quizserviceapi/{everything}",
-      "UpstreamHttpMethod": [
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE"
-      ],
-      "FileCacheOptions": {
-        "TtlSeconds": 15
-      },
-      "LoadBalancerOptions": {
-        "Type": "LeastConnection",
-        "Key": null,
-        "Expiry": 0
-      }
+      "UpstreamPathTemplate": "/api/quiz/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "LoadBalancerOptions": { "Type": "LeastConnection" }
     },
     {
       "ServiceName": "UserServiceAPI",
+      "DownstreamPathTemplate": "/users/login",
+      "UpstreamPathTemplate": "/api/user/users/login",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "ServiceName": "UserServiceAPI",
+      "DownstreamPathTemplate": "/users/{everything}",
+      "UpstreamPathTemplate": "/api/user/users/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "ServiceName": "AuthServiceAPI",
       "DownstreamPathTemplate": "/{everything}",
-      "UpstreamPathTemplate": "/userserviceapi/{everything}",
-      "UpstreamHttpMethod": [
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE"
-      ],
-      "FileCacheOptions": {
-        "TtlSeconds": 15
-      },
-      "LoadBalancerOptions": {
-        "Type": "LeastConnection",
-        "Key": null,
-        "Expiry": 0
-      }
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "LoadBalancerOptions": { "Type": "LeastConnection" }
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://APIGatewayOcelot:8080",
+    "BaseUrl": "http://OcelotAPIGateway:8080",
+    "ReRoutesCaseSensitive": false,
     "RequestIdKey": "OcRequestId",
     "DownstreamScheme": "http",
-    "ReRoutesCaseSensitive": false,
     "UseServiceDiscovery": true,
     "ServiceDiscoveryProvider": {
       "Host": "EurekaRegistry",

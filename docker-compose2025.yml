@@ -31,6 +31,22 @@ services:
       - QuizServiceDBMongo
       - EurekaRegistry
   
+  QuizServiceAPI2:
+    container_name: QuizServiceAPI2
+    build:
+      context: ./QuizService
+      dockerfile: Dockerfile
+    image: quizserviceapi:1
+    restart: always
+    hostname: QuizServiceAPI2
+    ports:
+      - "8084:8080"
+    networks:
+      - quizNet
+    depends_on:
+      - QuizServiceDBMongo
+      - EurekaRegistry
+  
   UserServiceAPI:
     container_name: UserServiceAPI
     build:
@@ -45,6 +61,8 @@ services:
       REDIS_HOST: UserServiceDBRedis
       REDIS_PORT: 6379
       CLASSIC_QUIZ_SERVICE_URL: http://QuizServiceAPI:8080/api/classicQuiz
+      EUREKA_SERVER: http://EurekaRegistry:8761/eureka/
+      SERVICE_PORT: 8082
     networks:
       - quizNet
     depends_on:
@@ -117,11 +135,13 @@ services:
     restart: always
     hostname: OcelotAPIGateway
     ports:
-      - 5041:8080
+      - "5041:8080"
     networks:
       - quizNet
     depends_on:
       - EurekaRegistry
+    volumes:
+      - ./OcelotAPIGateway/ocelot.json:/app4/ocelot.json
 
 volumes:
   usersdb_data:

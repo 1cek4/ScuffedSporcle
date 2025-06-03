@@ -6,6 +6,7 @@ import mariadb
 from dotenv import load_dotenv
 import os
 import uuid
+import py_eureka_client.eureka_client as eureka_client
 
 load_dotenv()
 
@@ -47,9 +48,16 @@ def get_db_connection():
         print(f"Error connecting to MariaDB: {e}")
         raise HTTPException(status_code=500, detail="Database connection failed")  # Raise HTTPException
 
-
-
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    await eureka_client.init_async(
+        eureka_server="http://EurekaRegistry:8761/eureka/",
+        app_name="UserServiceAPI",
+        instance_port=8082,
+        instance_host="UserServiceAPI"
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +65,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/users/login", response_model=User)
+def get_user_by_credentials(username: str, password: str, conn: mariadb.Connection = Depends(get_db_connection)):
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users WHERE Username = ? AND Password = ?",
+            (username, password)
+        )
+        user = cur.fetchone()
+        cur.close()
+        if user:
+            return User(
+                userGuid=user[0],
+                email=user[1],
+                password=user[2],
+                userName=user[3],
+                completedQuiz=user[4],
+                isAdmin=bool(user[5])
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invalid username or password"
+            )
+    except mariadb.Error as e:
+        print(f"Error fetching user by credentials: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user from the database",
+        )
+    finally:
+        conn.close()
 
 
 
@@ -195,3 +236,6 @@ def delete_user(user_id: str, conn: mariadb.Connection = Depends(get_db_connecti
         )
     finally:
         conn.close()
+
+
+
