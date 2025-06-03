@@ -24,8 +24,25 @@ public class ClassicQuiz {
     private ArrayList<String> answers;
     private ArrayList<String> extras;
 
-    public ClassicQuiz(UUID quizGuid, String quizName, Category category, String quizDescription, String timer, String answerLabel, String hintHeading, String answerHeading, String extraHeading, ArrayList<String> hints, ArrayList<String> answers, ArrayList<String> extras) {
+    public ClassicQuiz() {}
+
+    public ClassicQuiz(
+        UUID quizGuid,
+        UUID userGuid,
+        String quizName,
+        Category category,
+        String quizDescription,
+        String timer,
+        String answerLabel,
+        String hintHeading,
+        String answerHeading,
+        String extraHeading,
+        ArrayList<String> hints,
+        ArrayList<String> answers,
+        ArrayList<String> extras
+    ) {
         this.quizGuid = quizGuid;
+        this.userGuid = userGuid;
         this.quizName = quizName;
         this.category = category;
         this.quizDescription = quizDescription;
@@ -133,5 +150,13 @@ public class ClassicQuiz {
 
     public void setExtras(ArrayList<String> extras) {
         this.extras = extras;
+    }
+
+    public UUID getUserGuid() {
+        return userGuid;
+    }
+
+    public void setUserGuid(UUID userGuid) {
+        this.userGuid = userGuid;
     }
 }

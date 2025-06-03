@@ -50,6 +50,7 @@ public class QuizRestController {
         existingQuiz.setHints(classicQuiz.getHints());
         existingQuiz.setAnswers(classicQuiz.getAnswers());
         existingQuiz.setExtras(classicQuiz.getExtras());
+        existingQuiz.setUserGuid(classicQuiz.getUserGuid());
 
         classicQuizRepo.save(existingQuiz);
     }
