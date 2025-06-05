@@ -1,12 +1,11 @@
 package com.example.QuizService;
-import com.sun.jdi.event.StepEvent;
-import org.springframework.data.annotation.Id;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.UUID;
 
-
-
+@Document(collection = "classicQuiz")
 public class ClassicQuiz {
 
     @Id

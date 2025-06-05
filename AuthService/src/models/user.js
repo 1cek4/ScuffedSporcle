@@ -20,7 +20,7 @@ class User {
     const conn = await pool.getConnection();
     try {
       const result = await conn.query(
-        'INSERT INTO users (userName, password) VALUES (?, ?)', // <-- userName
+        'INSERT INTO users (userName, password) VALUES (?, ?)',
         [username, password]
       );
       return result.insertId;
@@ -44,7 +44,7 @@ class User {
     const conn = await pool.getConnection();
     try {
       const rows = await conn.query(
-        'SELECT * FROM users WHERE UserName = ?', // <-- Use exact case
+        'SELECT * FROM users WHERE UserName = ?',
         [username]
       );
       return rows[0];

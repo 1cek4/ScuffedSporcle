@@ -21,14 +21,14 @@ class User(BaseModel):
     email: str
     password: str
     userName: str
-    completedQuiz: Optional[str] = None
+    completedQuiz: Optional[List[str]] = None
     isAdmin: Optional[bool] = False
 
 class UserCreate(BaseModel):
     email: str
     password: str
     userName: str
-    completedQuiz: Optional[str] = None
+    completedQuiz: Optional[List[str]] = None
     isAdmin: Optional[bool] = False
 
 
@@ -77,12 +77,20 @@ def get_user_by_credentials(username: str, password: str, conn: mariadb.Connecti
         user = cur.fetchone()
         cur.close()
         if user:
+            completed_quiz = user[4]
+            if isinstance(completed_quiz, str):
+                if completed_quiz.strip() == "":
+                    completed_quiz = []
+                else:
+                    completed_quiz = [q.strip() for q in completed_quiz.split(",")]
+            elif completed_quiz is None:
+                completed_quiz = []
             return User(
                 userGuid=user[0],
                 email=user[1],
                 password=user[2],
                 userName=user[3],
-                completedQuiz=user[4],
+                completedQuiz=completed_quiz,
                 isAdmin=bool(user[5])
             )
         else:
@@ -106,18 +114,26 @@ def get_user_by_credentials(username: str, password: str, conn: mariadb.Connecti
 def get_users(conn: mariadb.Connection = Depends(get_db_connection)):
     try:
         cur = conn.cursor()
-        cur.execute("SELECT UserGuid, Email, Password, Username, CompletedQuiz FROM users")
+        cur.execute("SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users")
         users_data = cur.fetchall()
-        users = [
-            User(
+        users = []
+        for row in users_data:
+            completed_quiz = row[4]
+            if isinstance(completed_quiz, str):
+                if completed_quiz.strip() == "":
+                    completed_quiz = []
+                else:
+                    completed_quiz = [q.strip() for q in completed_quiz.split(",")]
+            elif completed_quiz is None:
+                completed_quiz = []
+            users.append(User(
                 userGuid=row[0],
                 email=row[1],
                 password=row[2],
                 userName=row[3],
-                completedQuiz=row[4],
-            )
-            for row in users_data
-        ]
+                completedQuiz=completed_quiz,
+                isAdmin=bool(row[5]) if len(row) > 5 else False
+            ))
         cur.close()
         return users
     except mariadb.Error as e:
@@ -135,18 +151,27 @@ def get_user_by_id(user_id: str, conn: mariadb.Connection = Depends(get_db_conne
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT UserGuid, Email, Password, Username, CompletedQuiz FROM users WHERE UserGuid = ?",
+            "SELECT UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin FROM users WHERE UserGuid = ?",
             (user_id,)
         )
         user = cur.fetchone()
         cur.close()
         if user:
+            completed_quiz = user[4]
+            if isinstance(completed_quiz, str):
+                if completed_quiz.strip() == "":
+                    completed_quiz = []
+                else:
+                    completed_quiz = [q.strip() for q in completed_quiz.split(",")]
+            elif completed_quiz is None:
+                completed_quiz = []
             return User(
                 userGuid=user[0],
                 email=user[1],
                 password=user[2],
                 userName=user[3],
-                completedQuiz=user[4],
+                completedQuiz=completed_quiz,
+                isAdmin=bool(user[5]) if len(user) > 5 else False
             )
         else:
             raise HTTPException(
@@ -167,9 +192,11 @@ def create_user(user: UserCreate, conn: mariadb.Connection = Depends(get_db_conn
     try:
         cur = conn.cursor()
         new_guid = str(uuid.uuid4())
+        # Store as comma-separated string in DB
+        completed_quiz_str = ",".join(user.completedQuiz) if user.completedQuiz else ""
         cur.execute(
             "INSERT INTO users (UserGuid, Email, Password, Username, CompletedQuiz, IsAdmin) VALUES (?, ?, ?, ?, ?, ?)",
-            (new_guid, user.email, user.password, user.userName, user.completedQuiz, int(user.isAdmin))
+            (new_guid, user.email, user.password, user.userName, completed_quiz_str, int(user.isAdmin))
         )
         conn.commit()
         cur.close()
@@ -178,7 +205,7 @@ def create_user(user: UserCreate, conn: mariadb.Connection = Depends(get_db_conn
             email=user.email,
             password=user.password,
             userName=user.userName,
-            completedQuiz=user.completedQuiz,
+            completedQuiz=user.completedQuiz if user.completedQuiz else [],
             isAdmin=user.isAdmin
         )
     except mariadb.Error as e:
@@ -195,9 +222,11 @@ def create_user(user: UserCreate, conn: mariadb.Connection = Depends(get_db_conn
 def update_user(user_id: str, user: User, conn: mariadb.Connection = Depends(get_db_connection)):
     try:
         cur = conn.cursor()
+        # Store as comma-separated string in DB
+        completed_quiz_str = ",".join(user.completedQuiz) if user.completedQuiz else ""
         cur.execute(
-            "UPDATE users SET Email=?, Password=?, Username=?, CompletedQuiz=? WHERE UserGuid=?",
-            (user.email, user.password, user.userName, user.completedQuiz, user_id)
+            "UPDATE users SET Email=?, Password=?, Username=?, CompletedQuiz=?, IsAdmin=? WHERE UserGuid=?",
+            (user.email, user.password, user.userName, completed_quiz_str, int(user.isAdmin), user_id)
         )
         if cur.rowcount == 0:
             raise HTTPException(
@@ -205,7 +234,14 @@ def update_user(user_id: str, user: User, conn: mariadb.Connection = Depends(get
             )
         conn.commit()
         cur.close()
-        return user
+        return User(
+            userGuid=user_id,
+            email=user.email,
+            password=user.password,
+            userName=user.userName,
+            completedQuiz=user.completedQuiz if user.completedQuiz else [],
+            isAdmin=user.isAdmin
+        )
     except mariadb.Error as e:
         print(f"Error updating user: {e}")
         raise HTTPException(

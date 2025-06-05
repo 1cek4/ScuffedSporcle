@@ -13,9 +13,9 @@ using Steeltoe.Discovery.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// you can use this style...
+
 IConfiguration configuration = new ConfigurationBuilder().AddJsonFile("ocelot.json").Build();
-//IConfiguration configuration = new ConfigurationBuilder().AddJsonFile($"ocelot.{builder.Environment.EnvironmentName}.json", true, true).Build();
+
 builder.Services.AddOcelot(configuration)
 .AddEureka()
 .AddPolly();
@@ -24,7 +24,7 @@ builder.Services.AddOcelot(configuration)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// eureka
+
 builder.Services.AddDiscoveryClient(builder.Configuration);
 builder.Services.AddCors();
 
@@ -43,7 +43,7 @@ app.UseHttpsRedirection();
 app.UseCors(b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 
-// ocelot
+
 await app.UseOcelot();
 
 app.MapGet("/", () => "Hello World!");

@@ -7,10 +7,10 @@ const eurekaClient = require('./eureka');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+
 app.use(bodyParser.json());
 
-// Routes
+
 app.use('/users', userRoutes);
 
 const startServer = async () => {
