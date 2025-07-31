@@ -22,6 +22,7 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
 
 
   bool hasGuessed = false;
+  bool hasEverGuessed = false;
   List<bool> correctPositions = [];
 
 
@@ -30,6 +31,10 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
 
 
   bool isCompleted = false;
+  bool completedAdded = false;
+
+ 
+  int lastCorrectCount = 0;
 
   @override
   void initState() {
@@ -67,6 +72,8 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
   }
 
   void _addQuizToCompleted(String score) async {
+    if (completedAdded) return;
+    completedAdded = true;
     if (widget.loggedInUser != null) {
       final user = widget.loggedInUser!;
       final quizName = widget.quiz['quizName'] ?? '';
@@ -98,7 +105,9 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
     setState(() {
       currentAnswers = List.from(correctAnswers);
       gaveUp = true;
-      _addQuizToCompleted('0/${correctAnswers.length}');
+      hasGuessed = false;
+     
+      _addQuizToCompleted('$lastCorrectCount/${correctAnswers.length}');
     });
   }
 
@@ -106,9 +115,11 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
     if (guessesRemaining <= 0) return;
 
     setState(() {
+      hasEverGuessed = true;
       correctPositions = List.generate(correctAnswers.length, (index) {
         return currentAnswers[index] == correctAnswers[index];
       });
+      lastCorrectCount = correctPositions.where((isCorrect) => isCorrect).length;
       hasGuessed = true;
       guessesRemaining--;
 
@@ -118,17 +129,12 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
       if (allCorrect) {
 
         _addQuizToCompleted('${correctAnswers.length}/${correctAnswers.length}');
-        setState(() {
-          gaveUp = true;
-          isCompleted = true;
-        });
+        gaveUp = true;
+        isCompleted = true;
       } else if (guessesRemaining <= 0) {
 
-        int correctCount = correctPositions.where((isCorrect) => isCorrect).length;
-        _addQuizToCompleted('$correctCount/${correctAnswers.length}');
-        setState(() {
-          gaveUp = true;
-        });
+        _addQuizToCompleted('$lastCorrectCount/${correctAnswers.length}');
+        gaveUp = true;
       }
     });
   }
@@ -147,6 +153,60 @@ class _TakeOrderUpQuizPageState extends State<TakeOrderUpQuizPage> {
   @override
   Widget build(BuildContext context) {
     final quiz = widget.quiz;
+    final bool quizIsOver = gaveUp || isCompleted;
+
+    if (quizIsOver) {
+     
+      int correctCount = 0;
+      if (hasEverGuessed) {
+        for (int i = 0; i < correctAnswers.length; i++) {
+          if (currentAnswers[i] == correctAnswers[i]) correctCount++;
+        }
+      }
+      final score = '$lastCorrectCount/${correctAnswers.length}';
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(quiz['quizName'] ?? 'Order Up Quiz'),
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Quiz Completed!',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Your Score: $score',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange,
+                ),
+                child: const Text('Return to Quiz List'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final bool isCorrect = _checkOrder();
 
     return Scaffold(

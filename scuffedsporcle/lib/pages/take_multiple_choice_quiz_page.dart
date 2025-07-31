@@ -22,6 +22,7 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
   late List<List<String>> randomizedAnswers;
   late Timer _timer;
   int _timeLeft = 0;
+  bool completedAdded = false;
 
   @override
   void initState() {
@@ -58,6 +59,8 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
   }
 
   void _addQuizToCompleted(String score) async {
+    if (completedAdded) return;
+    completedAdded = true;
     if (widget.loggedInUser != null) {
       final user = widget.loggedInUser!;
       final quizName = widget.quiz['quizName'] ?? '';
@@ -106,15 +109,14 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
   }
 
   void _giveUp() {
-    final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
-    _addQuizToCompleted(score);
-
-    final answers = List<List<String>>.from(widget.quiz['answers'] ?? []);
     setState(() {
+      gaveUp = true;
+      final answers = List<List<String>>.from(widget.quiz['answers'] ?? []);
       for (int i = 0; i < answers.length; i++) {
         revealedAnswers[i] = answers[i][0];
       }
-      gaveUp = true;
+      final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
+      _addQuizToCompleted(score);
     });
   }
 
@@ -123,14 +125,14 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
     final quiz = widget.quiz;
     final hints = List<String>.from(quiz['hints'] ?? []);
 
-    if (remainingQuestionIndices.isEmpty) {
+    if (remainingQuestionIndices.isEmpty || gaveUp) {
       final score = '${revealedAnswers.where((a) => a != null).length}/${hints.length}';
       _addQuizToCompleted(score);
 
       return Scaffold(
         appBar: AppBar(
           title: Text(quiz['quizName'] ?? 'Multiple Choice Quiz'),
-          backgroundColor: Colors.purple,
+          backgroundColor: Colors.orange,
           foregroundColor: Colors.white,
         ),
         body: Center(
@@ -142,7 +144,7 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.purple,
+                  color: Colors.orange,
                 ),
               ),
               const SizedBox(height: 20),
@@ -157,7 +159,7 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
+                  backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Return to Quiz List'),
@@ -171,7 +173,7 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(quiz['quizName'] ?? 'Multiple Choice Quiz'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -217,7 +219,7 @@ class _TakeMultipleChoiceQuizPageState extends State<TakeMultipleChoiceQuizPage>
                       onPressed: gaveUp ? null : _giveUp,
                       child: const Text(
                         'Give Up',
-                        style: TextStyle(color: Colors.purple),
+                        style: TextStyle(color: Colors.orange),
                       ),
                     ),
                   ],

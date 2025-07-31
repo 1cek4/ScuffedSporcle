@@ -19,6 +19,7 @@ class _TakeClassicQuizPageState extends State<TakeClassicQuizPage> {
   bool gaveUp = false;
   late Timer _timer;
   int _timeLeft = 0;
+  bool completedAdded = false;
 
   @override
   void initState() {
@@ -48,6 +49,8 @@ class _TakeClassicQuizPageState extends State<TakeClassicQuizPage> {
   }
 
   void _addQuizToCompleted(String score) async {
+    if (completedAdded) return;
+    completedAdded = true;
     if (widget.loggedInUser != null) {
       final user = widget.loggedInUser!;
       final quizName = widget.quiz['quizName'] ?? '';
@@ -96,17 +99,15 @@ class _TakeClassicQuizPageState extends State<TakeClassicQuizPage> {
   }
 
   void _giveUp() async {
-
-    final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
-    _addQuizToCompleted(score);
-
-    final answers = List<String>.from(widget.quiz['answers'] ?? []);
     setState(() {
+      gaveUp = true;
+      final answers = List<String>.from(widget.quiz['answers'] ?? []);
       for (int i = 0; i < answers.length; i++) {
         revealedAnswers[i] = answers[i];
       }
-      gaveUp = true;
     });
+    final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
+    _addQuizToCompleted(score);
   }
 
   @override
@@ -116,6 +117,54 @@ class _TakeClassicQuizPageState extends State<TakeClassicQuizPage> {
     final answers = List<String>.from(quiz['answers'] ?? []);
     final extras = List<String>.from(quiz['extras'] ?? []);
     final int rowCount = [hints.length, answers.length, extras.length].reduce((a, b) => a > b ? a : b);
+
+    final bool isCompleted = revealedAnswers.where((a) => a != null).length == revealedAnswers.length || gaveUp;
+
+    if (isCompleted) {
+      final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
+      _addQuizToCompleted(score);
+
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(quiz['quizName'] ?? 'Quiz'),
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Quiz Completed!',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Your Score: $score',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange,
+                ),
+                child: const Text('Return to Quiz List'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

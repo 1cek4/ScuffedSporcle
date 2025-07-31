@@ -19,7 +19,7 @@ class CreateQuizPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('Choose Quiz Type', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const Text('Choose Quiz Type', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           ...quizTypes.map((type) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -47,6 +47,7 @@ class CreateQuizPage extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B00),
                 foregroundColor: Colors.white,
+                textStyle: const TextStyle(fontSize: 30),
               ),
               child: Text(type),
             ),

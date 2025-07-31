@@ -24,6 +24,8 @@ class _TakeClickableQuizPageState extends State<TakeClickableQuizPage> {
   late List<int> answerMapping; 
   late Timer _timer;
   int _timeLeft = 0;
+  bool completedAdded = false;
+  int lastScoreOnGiveUp = 0;
 
   @override
   void initState() {
@@ -66,6 +68,8 @@ class _TakeClickableQuizPageState extends State<TakeClickableQuizPage> {
   }
 
   void _addQuizToCompleted(String score) async {
+    if (completedAdded) return;
+    completedAdded = true;
     if (widget.loggedInUser != null) {
       final user = widget.loggedInUser!;
       final quizName = widget.quiz['quizName'] ?? '';
@@ -120,16 +124,17 @@ class _TakeClickableQuizPageState extends State<TakeClickableQuizPage> {
   }
 
   void _giveUp() {
-    final score = '${revealedAnswers.where((a) => a != null).length}/${revealedAnswers.length}';
-    _addQuizToCompleted(score);
-
-    final answers = List<String>.from(widget.quiz['answers'] ?? []);
     setState(() {
+     
+      lastScoreOnGiveUp = revealedAnswers.where((a) => a != null).length;
+      final answers = List<String>.from(widget.quiz['answers'] ?? []);
       for (int i = 0; i < answers.length; i++) {
         revealedAnswers[i] = answers[i];
       }
       gaveUp = true;
     });
+    final score = '$lastScoreOnGiveUp/${revealedAnswers.length}';
+    _addQuizToCompleted(score);
   }
 
   @override
@@ -139,10 +144,10 @@ class _TakeClickableQuizPageState extends State<TakeClickableQuizPage> {
     final answers = List<String>.from(quiz['answers'] ?? []);
 
 
-    if (remainingQuestionIndices.isEmpty) {
-      final score = '${revealedAnswers.where((a) => a != null).length}/${answers.length}';
-      
-
+    if (remainingQuestionIndices.isEmpty || gaveUp) {
+      final score = gaveUp
+          ? '$lastScoreOnGiveUp/${answers.length}'
+          : '${revealedAnswers.where((a) => a != null).length}/${answers.length}';
       _addQuizToCompleted(score);
 
       return Scaffold(
@@ -322,7 +327,7 @@ class _TakeClickableQuizPageState extends State<TakeClickableQuizPage> {
                         child: Text(
                           randomizedAnswers[index],
                           style: TextStyle(
-                            fontSize: 10, 
+                            fontSize: 20, 
                             color: isCorrectForCurrentQuestion 
                               ? Colors.white 
                               : isCorrectlyUsed 

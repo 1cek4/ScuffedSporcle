@@ -101,7 +101,10 @@ class _AuthPageState extends State<AuthPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Already logged in as ${widget.loggedInUser!['userName']}'),
+            Text(
+              'Already logged in as ${widget.loggedInUser!['userName']}',
+              style: const TextStyle(fontSize: 24),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
@@ -110,6 +113,7 @@ class _AuthPageState extends State<AuthPage> {
                 }
               },
               child: const Text('Sign Out'),
+              
             ),
           ],
         ),
